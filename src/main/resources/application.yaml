@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: Lovable
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/lovable}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASS:Akg@1234}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
