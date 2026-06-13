@@ -23,8 +23,8 @@ public class Project {
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name ="user_id",nullable = false)
-    private User user;
+    @JoinColumn(name ="owner_id",nullable = false)
+    private User owner;
 
     private Boolean isPublic = false;
 
@@ -34,6 +34,6 @@ public class Project {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    private String deletedAt;
+    private LocalDateTime deletedAt;
 
 }

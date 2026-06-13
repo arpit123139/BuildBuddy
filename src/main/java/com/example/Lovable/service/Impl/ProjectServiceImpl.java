@@ -5,34 +5,44 @@ import com.example.Lovable.dto.project.ProjectResponse;
 import com.example.Lovable.dto.project.ProjectSummaryResponse;
 import com.example.Lovable.entity.Project;
 import com.example.Lovable.entity.User;
+import com.example.Lovable.mapper.ProjectMapper;
 import com.example.Lovable.repository.ProjectRepository;
 import com.example.Lovable.repository.UserRepository;
 import com.example.Lovable.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
+    private final ProjectMapper projectMapper;
+    private final  ModelMapper modelMapper;
 
     @Override
-    public ProjectSummaryResponse getUserProjects(Long userId) {
-        return null;
+    public List<ProjectSummaryResponse> getUserProjects(Long userId) {
+
+        List<Project> user_project=projectRepository.findALLAccessibleBYUser(userId);
+        List<ProjectSummaryResponse> projectSummaryResponses=
+                user_project.stream().map(project -> projectMapper.toProjectSummaryResponse(project)).collect(Collectors.toList());
+
+        return projectSummaryResponses;
     }
 
     @Override
     public ProjectResponse getProjectById(Long id, Long userId) {
 
-        List<Project> user_project=projectRepository.findByUser(userId);
-        Project project=(Project) user_project.stream().filter(project1 -> project1.getId()==id);
-
+        Project project=projectRepository.getProjectById(userId,id).orElseThrow();
+        return projectMapper.toProjectResponse(project);
     }
 
     @Override
@@ -40,19 +50,26 @@ public class ProjectServiceImpl implements ProjectService {
         User user=userRepository.findById(userId).orElse(null);
         Project newProject= Project.builder()
                 .name(request.getName())
-                .user(user)
+                .owner(user)
                 .isPublic(false)
                 .build();
-        return modelMapper.map(projectRepository.save(newProject), ProjectResponse.class);
+
+        Project saved_project=projectRepository.save(newProject);
+        return projectMapper.toProjectResponse(saved_project);
     }
 
     @Override
     public ProjectResponse updateProject(Long id, ProjectRequest request, Long userId) {
-        return null;
+        Project project=projectRepository.getProjectById(userId,id).orElseThrow();
+        project.setName(request.getName());
+
+        return projectMapper.toProjectResponse(project);
     }
 
     @Override
     public void softDelete(Long id, Long userId) {
+        Project project=projectRepository.getProjectById(userId,id).orElseThrow();
+        project.setDeletedAt(LocalDateTime.now());
 
     }
 }

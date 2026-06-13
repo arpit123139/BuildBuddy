@@ -5,8 +5,10 @@ import com.example.Lovable.dto.project.ProjectResponse;
 import com.example.Lovable.dto.project.ProjectSummaryResponse;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
+
 public interface ProjectService {
-     ProjectSummaryResponse getUserProjects(Long userId);
+     List<ProjectSummaryResponse> getUserProjects(Long userId);
 
      ProjectResponse getProjectById(Long id, Long userId);
 
