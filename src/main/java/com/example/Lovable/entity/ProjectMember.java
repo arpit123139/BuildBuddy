@@ -1,27 +1,37 @@
 package com.example.Lovable.entity;
 
 import com.example.Lovable.enums.ProjectRole;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDateTime;
 
-@Data
+
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Getter
+@Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ProjectMember {
 
-    ProjectMemberId projectMemberId;
+    @EmbeddedId
+    ProjectMemberId id;
 
+    @ManyToOne
+    @MapsId("projectId")
     Project project;
 
+    @ManyToOne
+    @MapsId("userId")
     User user;
 
-    ProjectRole role;
-
-    User invitedBy;
+    @Enumerated(EnumType.STRING)
+     @Column(nullable = false)
+    ProjectRole projectRole;
 
     LocalDateTime invitedAt;
+    LocalDateTime acceptedAt;
 }

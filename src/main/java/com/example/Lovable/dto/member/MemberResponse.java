@@ -14,10 +14,9 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MemberResponse {
 
-    private Long id;
+    private Long userId;
     private String email;
-    private String avatarUrl;
     LocalDateTime invitedAt;
-    ProjectRole role;
+    ProjectRole projectRole;
 
 }

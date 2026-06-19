@@ -61,6 +61,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse updateProject(Long id, ProjectRequest request, Long userId) {
         Project project=projectRepository.getProjectById(userId,id).orElseThrow();
+        if(project.getOwner().getId()!=userId)   // Just a Check
+            throw new RuntimeException("You are not Allowed to Update the Project");
         project.setName(request.getName());
 
         return projectMapper.toProjectResponse(project);
@@ -69,6 +71,8 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public void softDelete(Long id, Long userId) {
         Project project=projectRepository.getProjectById(userId,id).orElseThrow();
+        if(project.getOwner().getId()!=userId)   // Just a Check
+           throw new RuntimeException("You are not Allowed to delete the Project");
         project.setDeletedAt(LocalDateTime.now());
 
     }
