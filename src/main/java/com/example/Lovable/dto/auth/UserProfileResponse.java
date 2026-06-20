@@ -13,4 +13,5 @@ public class UserProfileResponse {
 
     private Long id;
     private String username;
+    private String name;
 }

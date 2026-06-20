@@ -13,8 +13,10 @@ import com.example.Lovable.mapper.ProjectMapper;
 import com.example.Lovable.repository.ProjectMemberRepository;
 import com.example.Lovable.repository.ProjectRepository;
 import com.example.Lovable.repository.UserRepository;
+import com.example.Lovable.security.AuthUtil;
 import com.example.Lovable.service.ProjectService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -32,10 +35,11 @@ public class ProjectServiceImpl implements ProjectService {
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
     private final ProjectMemberRepository projectMemberRepository;
+    private final AuthUtil authUtil;
 
     @Override
-    public List<ProjectSummaryResponse> getUserProjects(Long userId) {
-
+    public List<ProjectSummaryResponse> getUserProjects() {
+        Long userId=authUtil.getCurrentUserId();
         List<Project> user_project=projectRepository.findALLAccessibleBYUser(userId);
         List<ProjectSummaryResponse> projectSummaryResponses=
                 user_project.stream().map(project -> projectMapper.toProjectSummaryResponse(project)).collect(Collectors.toList());
@@ -44,15 +48,18 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse getProjectById(Long id, Long userId) {
-
+    public ProjectResponse getProjectById(Long id) {
+        Long userId=authUtil.getCurrentUserId();
         Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
         return projectMapper.toProjectResponse(project);
     }
 
     @Override
-    public ProjectResponse createProject(ProjectRequest request, Long userId) {
-        User user=userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User",userId.toString()));
+    public ProjectResponse createProject(ProjectRequest request) {
+        Long userId=authUtil.getCurrentUserId();
+//        User user=userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User",userId.toString()));
+        //TODO: Make a note
+        User user=userRepository.getReferenceById(userId);
         Project newProject= Project.builder()
                 .name(request.getName())
                 .isPublic(false)
@@ -75,7 +82,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponse updateProject(Long id, ProjectRequest request, Long userId) {
+    public ProjectResponse updateProject(Long id, ProjectRequest request) {
+        Long userId=authUtil.getCurrentUserId();
         Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
 
         //TODO: Only owner can update the Project
@@ -85,7 +93,8 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void softDelete(Long id, Long userId) {
+    public void softDelete(Long id) {
+        Long userId=authUtil.getCurrentUserId();
         Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
         //TODO: Only owner can update the Project
         project.setDeletedAt(LocalDateTime.now());

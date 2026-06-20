@@ -12,6 +12,7 @@ import com.example.Lovable.mapper.ProjectMemberMapper;
 import com.example.Lovable.repository.ProjectMemberRepository;
 import com.example.Lovable.repository.ProjectRepository;
 import com.example.Lovable.repository.UserRepository;
+import com.example.Lovable.security.AuthUtil;
 import com.example.Lovable.service.ProjectMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     private final ProjectMemberRepository projectMemberRepository;
     private final ProjectMemberMapper projectMemberMapper;
     private final UserRepository userRepository;
+    private final AuthUtil authUtil;
 
     public Project getAccessibleProjectById(Long projectId,Long userId)
     {
@@ -36,8 +38,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public List<MemberResponse> getProjectMembers(Long projectId, Long userId) {
-
+    public List<MemberResponse> getProjectMembers(Long projectId) {
+        Long userId= authUtil.getCurrentUserId();
         Project project=getAccessibleProjectById(projectId,userId);  // To check whether the Project exsist or not
         List<MemberResponse>projectMembers=new ArrayList<>();
         projectMembers.addAll(
@@ -49,7 +51,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public MemberResponse inviteMember(Long projectId, InviteMemberRequest request, Long userId) {
+    public MemberResponse inviteMember(Long projectId, InviteMemberRequest request) {
+        Long userId= authUtil.getCurrentUserId();
 
         Project project=getAccessibleProjectById(projectId,userId);  //To check whether the Project exsist or not
 
@@ -77,7 +80,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public MemberResponse updateMemberRole(Long projectId, Long memberId, UpdateRoleRequest request, Long userId) {
+    public MemberResponse updateMemberRole(Long projectId, Long memberId, UpdateRoleRequest request) {
+        Long userId= authUtil.getCurrentUserId();
 
         //TODO: Add validation via spring security so that only owner can update Member Role
 
@@ -93,7 +97,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public void deleteMember(Long projectId, Long memberId, Long userId) {
+    public void deleteMember(Long projectId, Long memberId) {
+        Long userId= authUtil.getCurrentUserId();
         Project project=getAccessibleProjectById(projectId,userId);
 
         //TODO: Add validation via spring security so that only owner can Delete Member
