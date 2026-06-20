@@ -11,7 +11,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface ProjectMapper {
 
-        @Mapping(source = "owner",target = "user")
+
         ProjectResponse toProjectResponse(Project project);
 
         ProjectSummaryResponse toProjectSummaryResponse(Project project);

@@ -4,8 +4,13 @@ import com.example.Lovable.dto.project.ProjectRequest;
 import com.example.Lovable.dto.project.ProjectResponse;
 import com.example.Lovable.dto.project.ProjectSummaryResponse;
 import com.example.Lovable.entity.Project;
+import com.example.Lovable.entity.ProjectMember;
+import com.example.Lovable.entity.ProjectMemberId;
 import com.example.Lovable.entity.User;
+import com.example.Lovable.enums.ProjectRole;
+import com.example.Lovable.error.ResourceNotFoundException;
 import com.example.Lovable.mapper.ProjectMapper;
+import com.example.Lovable.repository.ProjectMemberRepository;
 import com.example.Lovable.repository.ProjectRepository;
 import com.example.Lovable.repository.UserRepository;
 import com.example.Lovable.service.ProjectService;
@@ -26,7 +31,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
-    private final  ModelMapper modelMapper;
+    private final ProjectMemberRepository projectMemberRepository;
 
     @Override
     public List<ProjectSummaryResponse> getUserProjects(Long userId) {
@@ -41,28 +46,39 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse getProjectById(Long id, Long userId) {
 
-        Project project=projectRepository.getProjectById(userId,id).orElseThrow();
+        Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
         return projectMapper.toProjectResponse(project);
     }
 
     @Override
     public ProjectResponse createProject(ProjectRequest request, Long userId) {
-        User user=userRepository.findById(userId).orElse(null);
+        User user=userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User",userId.toString()));
         Project newProject= Project.builder()
                 .name(request.getName())
-                .owner(user)
                 .isPublic(false)
                 .build();
 
-        Project saved_project=projectRepository.save(newProject);
-        return projectMapper.toProjectResponse(saved_project);
+        newProject=projectRepository.save(newProject);
+
+        ProjectMemberId projectMemberId=new ProjectMemberId(userId, newProject.getId());
+
+        ProjectMember projectMember=ProjectMember.builder()
+                .user(user)
+                .projectRole(ProjectRole.OWNER)
+                .project(newProject)
+                .invitedAt(LocalDateTime.now())
+                .acceptedAt(LocalDateTime.now())
+                .build();
+
+        projectMemberRepository.save(projectMember);
+        return projectMapper.toProjectResponse(newProject);
     }
 
     @Override
     public ProjectResponse updateProject(Long id, ProjectRequest request, Long userId) {
-        Project project=projectRepository.getProjectById(userId,id).orElseThrow();
-        if(project.getOwner().getId()!=userId)   // Just a Check
-            throw new RuntimeException("You are not Allowed to Update the Project");
+        Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
+
+        //TODO: Only owner can update the Project
         project.setName(request.getName());
 
         return projectMapper.toProjectResponse(project);
@@ -70,9 +86,8 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void softDelete(Long id, Long userId) {
-        Project project=projectRepository.getProjectById(userId,id).orElseThrow();
-        if(project.getOwner().getId()!=userId)   // Just a Check
-           throw new RuntimeException("You are not Allowed to delete the Project");
+        Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
+        //TODO: Only owner can update the Project
         project.setDeletedAt(LocalDateTime.now());
 
     }

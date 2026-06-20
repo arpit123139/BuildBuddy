@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class MemberResponse {
 
     private Long userId;
-    private String email;
+    private String username;
     LocalDateTime invitedAt;
     ProjectRole projectRole;
 

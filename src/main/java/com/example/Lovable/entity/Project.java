@@ -12,7 +12,12 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "projects")
+@Table(name = "projects",
+        indexes = {
+        @Index(name = "idx_projects_updated_at_desc",columnList = "updatedAt DESC,deletedAt"), @Index(name = "idx_projects_deleted_at",columnList = "deletedAt")  // order matters in the column list
+        }
+
+)
 public class Project {
 
     @Id
@@ -21,10 +26,6 @@ public class Project {
 
     @Column(nullable = false)
     private String name;
-
-    @ManyToOne(fetch = FetchType.LAZY,optional = false)
-    @JoinColumn(name ="owner_id",nullable = false)
-    private User owner;
 
     private Boolean isPublic = false;
 

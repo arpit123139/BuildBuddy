@@ -7,6 +7,7 @@ import com.example.Lovable.entity.Project;
 import com.example.Lovable.entity.ProjectMember;
 import com.example.Lovable.entity.ProjectMemberId;
 import com.example.Lovable.entity.User;
+import com.example.Lovable.error.ResourceNotFoundException;
 import com.example.Lovable.mapper.ProjectMemberMapper;
 import com.example.Lovable.repository.ProjectMemberRepository;
 import com.example.Lovable.repository.ProjectRepository;
@@ -30,19 +31,15 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     public Project getAccessibleProjectById(Long projectId,Long userId)
     {
-        Project project=projectRepository.getProjectById(userId,projectId).orElseThrow();
+        Project project=projectRepository.getProjectById(userId,projectId).orElseThrow(()->new ResourceNotFoundException("Project",projectId.toString()));
         return project;
     }
 
     @Override
     public List<MemberResponse> getProjectMembers(Long projectId, Long userId) {
 
-        Project project=getAccessibleProjectById(projectId,userId);
+        Project project=getAccessibleProjectById(projectId,userId);  // To check whether the Project exsist or not
         List<MemberResponse>projectMembers=new ArrayList<>();
-
-        //Adding owner as the Member
-        projectMembers.add(projectMemberMapper.toMemberResponse( project.getOwner()));
-
         projectMembers.addAll(
                 projectMemberRepository.findByIdProjectId(projectId)
                         .stream()
@@ -53,12 +50,11 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     @Override
     public MemberResponse inviteMember(Long projectId, InviteMemberRequest request, Long userId) {
-        Project project=getAccessibleProjectById(projectId,userId);
 
-        if(project.getOwner().getId()!=userId)
-            throw new RuntimeException("Action Not Allowed");
+        Project project=getAccessibleProjectById(projectId,userId);  //To check whether the Project exsist or not
 
-        User invitee=userRepository.findByEmail(request.getEmail()).orElseThrow(()->new RuntimeException("Invitee Does Not Exsist"));
+        //TODO: Add validation via spring security so that only owner can invite Members
+        User invitee=userRepository.findByUsername(request.getUsername()).orElseThrow(()->new RuntimeException("Invitee Does Not Exsist"));
 
         if(invitee.getId()==userId)
             throw new RuntimeException("Cannot invite yourself");
@@ -66,10 +62,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         ProjectMemberId projectMemberId=new ProjectMemberId(invitee.getId(),projectId);
 
         if(projectMemberRepository.existsById(projectMemberId))
-        {
-            System.out.println("******###########################################################################################*********");
             throw new RuntimeException("Cannot Invite Again , Already part of the Project");
-        }
 
 
         ProjectMember projectMember=ProjectMember.builder()
@@ -85,10 +78,8 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
 
     @Override
     public MemberResponse updateMemberRole(Long projectId, Long memberId, UpdateRoleRequest request, Long userId) {
-        Project project=getAccessibleProjectById(projectId,userId);
 
-        if(project.getOwner().getId()!=userId)
-            throw new RuntimeException("Action Not Allowed");
+        //TODO: Add validation via spring security so that only owner can update Member Role
 
         ProjectMemberId projectMemberId=new ProjectMemberId(memberId,projectId);
 
@@ -105,8 +96,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     public void deleteMember(Long projectId, Long memberId, Long userId) {
         Project project=getAccessibleProjectById(projectId,userId);
 
-        if(project.getOwner().getId()!=userId)
-            throw new RuntimeException("Action Not Allowed");
+        //TODO: Add validation via spring security so that only owner can Delete Member
 
         ProjectMemberId projectMemberId=new ProjectMemberId(memberId,projectId);
 

@@ -17,5 +17,5 @@ public class ProjectResponse {
     String name;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
-    UserProfileResponse user;
+    UserProfileResponse owner;
 }

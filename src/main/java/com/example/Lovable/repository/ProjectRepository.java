@@ -17,14 +17,13 @@ public interface ProjectRepository extends JpaRepository<Project,Long> {
     @Query("""
             select p FROM Project p
             where p.deletedAt IS NULL
-            AND (p.owner.id=:userId)
             ORDER BY p.updatedAt DESC
             """)
     List<Project> findALLAccessibleBYUser(@Param("userId") Long userId);
 
     @Query("""
             SELECT p from Project p
-            where p.deletedAt IS NULL AND (p.owner.id=:userId) AND (p.id=:projectId)
+            where p.deletedAt IS NULL AND (p.id=:projectId)
             """)
     Optional<Project> getProjectById(@Param("userId")Long userId, @Param("projectId") Long projectId);
 }
