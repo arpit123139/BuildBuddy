@@ -23,7 +23,7 @@ public class AuthUtil {
 
     @Value("${jwt.secretKey}")
     private String jwtSecretKey;
-    
+
     private SecretKey getSecretKey(){
         return Keys.hmacShaKeyFor(jwtSecretKey.getBytes(StandardCharsets.UTF_8));
 
@@ -61,7 +61,7 @@ public class AuthUtil {
     public Long getCurrentUserId(){
         Authentication authentication= SecurityContextHolder.getContext().getAuthentication();
         if(authentication==null || !(authentication.getPrincipal() instanceof JwtUserPrincipal))
-            throw new AuthenticationCredentialsNotFoundException("No JWT Fount");
+            throw new AuthenticationCredentialsNotFoundException("No JWT Fount User Not Authenticated");
 
         return ((JwtUserPrincipal) authentication.getPrincipal()).getUserId();
     }

@@ -1,25 +1,33 @@
 package com.example.Lovable.entity;
 
 import com.example.Lovable.enums.SubscriptionStatus;
-import jakarta.persistence.ManyToOne;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Entity
+@Getter
+@Setter
 public class Subscription {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    //But there will be only one Subscription Active
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
     private User user;
 
+    @ManyToOne
+    @JoinColumn(nullable = false)
     private Plan plan;
 
     private String stripCustomerId;
@@ -27,13 +35,17 @@ public class Subscription {
     private String stripSubscriptionId;
 
 
-    private LocalDateTime currentPeriodStart;
-    private LocalDateTime currentPeriodEnd;
+    private Instant currentPeriodStart;
+    private Instant currentPeriodEnd;
     private Boolean cancelAtPeriodEnd=false;
 
-    private LocalDateTime createdAt=LocalDateTime.now();
-    private LocalDateTime updatedAt;
+    @CreationTimestamp
+    private Instant createdAt;
 
+    @UpdateTimestamp
+    private Instant updatedAt;
+
+    @Enumerated(EnumType.STRING)
     private SubscriptionStatus status;
 
 }

@@ -8,6 +8,7 @@ import com.example.Lovable.entity.ProjectMember;
 import com.example.Lovable.entity.ProjectMemberId;
 import com.example.Lovable.entity.User;
 import com.example.Lovable.enums.ProjectRole;
+import com.example.Lovable.error.BadRequestException;
 import com.example.Lovable.error.ResourceNotFoundException;
 import com.example.Lovable.mapper.ProjectMapper;
 import com.example.Lovable.repository.ProjectMemberRepository;
@@ -15,9 +16,11 @@ import com.example.Lovable.repository.ProjectRepository;
 import com.example.Lovable.repository.UserRepository;
 import com.example.Lovable.security.AuthUtil;
 import com.example.Lovable.service.ProjectService;
+import com.example.Lovable.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +39,7 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
     private final ProjectMemberRepository projectMemberRepository;
     private final AuthUtil authUtil;
+    private final SubscriptionService subscriptionService;
 
     @Override
     public List<ProjectSummaryResponse> getUserProjects() {
@@ -48,6 +52,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canViewProject(#id)")
     public ProjectResponse getProjectById(Long id) {
         Long userId=authUtil.getCurrentUserId();
         Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
@@ -57,9 +62,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse createProject(ProjectRequest request) {
         Long userId=authUtil.getCurrentUserId();
-//        User user=userRepository.findById(userId).orElseThrow(()->new ResourceNotFoundException("User",userId.toString()));
+
+        if(!subscriptionService.canCreateNewProject()){
+            throw new BadRequestException("User cannot create a New Project , Plz upgrade your plan");
+        }
+
         //TODO: Make a note
         User user=userRepository.getReferenceById(userId);
+
         Project newProject= Project.builder()
                 .name(request.getName())
                 .isPublic(false)
@@ -82,6 +92,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canEditProject(#id)")
     public ProjectResponse updateProject(Long id, ProjectRequest request) {
         Long userId=authUtil.getCurrentUserId();
         Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));
@@ -93,6 +104,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canDelete(#id)")
     public void softDelete(Long id) {
         Long userId=authUtil.getCurrentUserId();
         Project project=projectRepository.getProjectById(userId,id).orElseThrow(()->new ResourceNotFoundException("Project",id.toString()));

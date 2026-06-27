@@ -15,6 +15,7 @@ import com.example.Lovable.repository.UserRepository;
 import com.example.Lovable.security.AuthUtil;
 import com.example.Lovable.service.ProjectMemberService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -38,9 +39,10 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canViewMember(#projectId)")
     public List<MemberResponse> getProjectMembers(Long projectId) {
         Long userId= authUtil.getCurrentUserId();
-        Project project=getAccessibleProjectById(projectId,userId);  // To check whether the Project exsist or not
+
         List<MemberResponse>projectMembers=new ArrayList<>();
         projectMembers.addAll(
                 projectMemberRepository.findByIdProjectId(projectId)
@@ -51,13 +53,14 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canManageMember(#projectId)")
     public MemberResponse inviteMember(Long projectId, InviteMemberRequest request) {
         Long userId= authUtil.getCurrentUserId();
 
-        Project project=getAccessibleProjectById(projectId,userId);  //To check whether the Project exsist or not
+        Project project=projectRepository.getReferenceById(projectId);
 
-        //TODO: Add validation via spring security so that only owner can invite Members
-        User invitee=userRepository.findByUsername(request.getUsername()).orElseThrow(()->new RuntimeException("Invitee Does Not Exsist"));
+        User invitee=userRepository.findByUsername(request.getUsername()).orElseThrow(()->new ResourceNotFoundException(
+                "User", request.getUsername()));
 
         if(invitee.getId()==userId)
             throw new RuntimeException("Cannot invite yourself");
@@ -80,14 +83,14 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canManageMember(#projectId)")
     public MemberResponse updateMemberRole(Long projectId, Long memberId, UpdateRoleRequest request) {
-        Long userId= authUtil.getCurrentUserId();
-
-        //TODO: Add validation via spring security so that only owner can update Member Role
 
         ProjectMemberId projectMemberId=new ProjectMemberId(memberId,projectId);
 
-        ProjectMember projectMember=projectMemberRepository.findById(projectMemberId).orElseThrow();
+        ProjectMember projectMember=
+                projectMemberRepository.findById(projectMemberId).orElseThrow(()->new ResourceNotFoundException(
+                        "ProjectMember",projectMemberId));
 
         projectMember.setProjectRole(request.getRole());
 
@@ -97,16 +100,13 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @PreAuthorize("@securityExpression.canManageMember(#projectId)")
     public void deleteMember(Long projectId, Long memberId) {
-        Long userId= authUtil.getCurrentUserId();
-        Project project=getAccessibleProjectById(projectId,userId);
-
-        //TODO: Add validation via spring security so that only owner can Delete Member
 
         ProjectMemberId projectMemberId=new ProjectMemberId(memberId,projectId);
 
         if(!projectMemberRepository.existsById(projectMemberId))
-            throw new RuntimeException("Member does not exsist");
+            throw new ResourceNotFoundException("ProjectMember",projectMemberId);
 
         projectMemberRepository.deleteById(projectMemberId);
 

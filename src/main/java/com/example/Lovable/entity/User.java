@@ -32,6 +32,8 @@ public class User implements UserDetails {
     private String  password;
     private String name;
 
+    @Column(unique = true)
+    String stripeCustomerId;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

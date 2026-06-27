@@ -1,8 +1,11 @@
 package com.example.Lovable.error;
 
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -32,5 +35,24 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleInputValidationError(MethodArgumentNotValidException ex){
         List<ApiFieldError> errors= ex.getBindingResult().getFieldErrors().stream().map(error->new ApiFieldError(error.getField(),error.getDefaultMessage())).toList();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ApiError(HttpStatus.BAD_REQUEST,"Input Validation failed",errors));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDeniedException(AccessDeniedException ex){
+        ApiError apiError=new ApiError(HttpStatus.FORBIDDEN,"Access denied:Insufficient Privilege");
+        return  ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiError);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthenticationException(AuthenticationException ex){
+        log.info("Authentication Exception");
+        ApiError apiError=new ApiError(HttpStatus.UNAUTHORIZED,"Authentication Failed "+ex.getMessage());
+        return   ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiError> handleJwtException(JwtException exp){
+        ApiError apiError=new ApiError(HttpStatus.UNAUTHORIZED, exp.getMessage());
+        return new ResponseEntity<>(apiError,HttpStatus.UNAUTHORIZED);
     }
 }

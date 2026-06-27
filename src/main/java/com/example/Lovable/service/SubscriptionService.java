@@ -1,15 +1,27 @@
 package com.example.Lovable.service;
 
-import com.example.Lovable.dto.subscription.CheckoutRequest;
-import com.example.Lovable.dto.subscription.CheckoutResponse;
-import com.example.Lovable.dto.subscription.PortalResponse;
-import com.example.Lovable.dto.subscription.SubscriptionResponse;
+import com.example.Lovable.dto.subscription.*;
+import com.example.Lovable.enums.SubscriptionStatus;
 import org.jspecify.annotations.Nullable;
 
+import java.time.Instant;
+import java.util.List;
+
 public interface SubscriptionService {
-     SubscriptionResponse getCurrentSubscription(Long userId);
+     SubscriptionResponse getCurrentSubscription();
 
-     CheckoutResponse createCheckoutSessionUrl(CheckoutRequest request, Long userId);
+    void createSubscription(Long userId, Long planId, String subscriptionId, String customerId);
 
-     PortalResponse openCustomerPortal(Long userId);
+    void cancelSubscription(String subscriptId);
+
+    void updateSubscription(String subscriptId, SubscriptionStatus status, Instant periodStart, Instant periodEnd,
+                            Boolean cancelAtPeriodEnd, Long planId);
+
+    void renewSubscriptionPeriod(String subscriptionId, Instant periodStart, Instant periodEnd);
+
+    void markSubscriptionPastDue(String subscriptionId);
+
+    boolean canCreateNewProject();
+
+     PlanResponse getAllActivePlans();
 }

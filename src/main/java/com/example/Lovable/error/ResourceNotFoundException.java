@@ -13,5 +13,5 @@ import lombok.experimental.FieldDefaults;
 public class ResourceNotFoundException extends RuntimeException{
 
     String resource;
-    String resourceId;
+    Object resourceId;
 }
